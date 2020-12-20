@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Simples</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
+</head>
+<body>
+    <div class="container">
+        <h1>Cadastro Simples</h1>
+        <hr>
+        <div>
+            <input name='id' type="hidden"/>
+            <div class="form-group">
+                <label for="Name" ></label>
+                <input type="text" class="form-control" name="name" placeholder="Digite o nome" />
+            </div>
+            <button class="btn btn-success" save>Salvar</button>
+        </div>
+
+        <table class="table" id="clients">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Açoes</th>
+                </tr>
+            </thead>
+            <tbody id="clientsRows"></tbody>
+        </table>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+    <script>
+        const API = "http://localhost:3000";
+
+        const createButton = (label, type) => {
+            return $('<button>').addClass(`btn btn-${type}`).html(label);
+        };
+
+        const renderRows = (clients)=>{
+            const rows =  clients.map(client =>{
+                const updateButton = createButton('Atualizar', 'warning').click(()=>loadClient(client));
+                const removeButton = createButton('Excluir', 'danger').click(()=>removeClients(client));
+
+                return $('<tr>')
+                    .append($('<td>').append(client.name))
+                    .append($('<td>').append(updateButton).append(removeButton));
+            });
+
+            $('#clientsRows').html(rows)
+        };
+
+        const removeClients = client =>{
+            console.log(client._id)
+            $.ajax({
+                url: `${API}/clients/${client._id}`,
+                method: 'DELETE',
+                success: clients => {
+                    getClients();
+                }
+            })
+        }
+        
+        const loadClient = client => {
+            $('[name=id]').val(client._id)
+            $('[name=name]').val(client.name)
+        }
+
+        const getClients = () =>{
+            $.ajax({
+                url: `${API}/clients`,
+                success: clients => {
+                    renderRows(clients)
+                    $('[name=id]').val('')
+                }
+            });
+        };
+
+        const saveClients = () =>{
+            const _id = $('[name=id]').val();
+            const name = $('[name=name]').val();
+
+            $.ajax({
+                url: `${API}/clients/${_id}`,
+                method: _id ? 'PUT' : 'POST',
+                data: _id ? { _id, name } : { name },
+                success: getClients
+            });
+        };
+
+
+        $(()=>{
+            getClients();
+            $('[save]').click(saveClients);
+        });
+
+    </script>
+</body>
+</html>
